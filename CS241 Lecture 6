@@ -1,0 +1,137 @@
+Goal: How to automatically detect if a word w is in a language?
+
+- Depends on how complex a language is
+    => { a^2n  *  b, n >= 0 } is easy
+    => { valid MIPS assembly programs } is easy
+    => { valid c/c++ programs } is harder
+    => some languages are impossible
+
+- we characterize languages according to how hard they are to recognize;
+- start with simple things
+    => finite language
+    => regular                  (easy)
+    => context free
+    => context sensitive        (harder)
+    => recursive                (hard)
+    => recursively enumerable
+
+- Finite languages : only finite # of strings in language
+    => ex. L = { cat, car, cow }
+    => read left to right, one character at a time
+    => no going back, no looking back
+    => w scanned exactly once
+
+- Given a string w, is it in L?
+    => scan input from left to right
+    => If 1st char is 'c'
+        => If 2nd char is 'a'
+            => If 3rd char is 't'
+
+                  => If no more chars, then accept
+
+            => Else if 3rd char is 'r'
+
+        => Else if 2nd char is 'a'
+
+                           t
+         c        a       ---> "CAT"
+-> Start --> "c" --> "ca" ---> "CAR"
+                  o        r
+                 --> "co" ---> "COW"
+                           w
+
+* Lower case = states, configuration of the program based on input seen so far
+* CAPS = accept if no more input, if stopped here
+
+- For scanner of tokenizer, check if inputs received are in correct order
+
+REGULAR LANGUAGES
+
+- Built from => finite languages
+             => union L1 U L2 = { x|x E L, or x E L2 }
+             => concatenation L1 [dot] L2 { xy|x E L, and y X L2 }
+             => repetition (Kleene *)
+
+- e.x. L1 = { dog, cat }
+       L2 = { fish, [epsilon] }
+       L1 [dot] L2 = { dogfish, catfish, dog, cat }
+
+       | dog [epsilon] | = 3  (length of word)
+       | [epsilon][epsilon]d[epsilon]o[epsilon]g[epsilon]| = 3
+
+Repetition L* = { [eps] } U { xy|x E L*, y E L }
+    => e.g. L { a, b }
+            L* = { [eps], a, b, aa, ab, ba, bb, aaa, aab, aba, abb, baa, bab ... }
+
+      L = { [eps] } = L*
+      L = { }
+      L* = { [eps] }
+
+    => e.g. Show { a^2n b, n >= 0} is regular
+            ({ aa }) * {b}
+            { a^2n b, n >= 1 }
+            { aa } [dot] ({ aa })* [dot] b
+
+Regular Expression       Set Notation          Description
+      /0                      {}                 empty set
+      [eps]                 {[eps]}             set w only empty str
+      aa                      {aa}              set with only 1 word (singleton set)
+  E1|E2 or E1 + E2          L1 U L2             alternation
+  E1 [dot] E2 or E1E2       L1L2                concatenation
+      E*                      L*                Repetition
+
+Precedence: * before [dot] e.g. aa* = a(a)*
+           [dot] before |  e.g. aa | b = (aa) | b
+
+Is C regular?
+
+{ valid C programs } <= { set of C tokens }* <= [sigma]* }
+
+regular?
+maybe?
+
+How can we automatically recognize if a given string is in the language?
+
+** check images 1 and 2 **
+
+Deterministic Finite Automation (DFA
+
+- Formally a DFA M is a 5 - tuple M = (E, Q, q0, A, &)
+    => E : finite alphabet, non-empty
+    => Q : a finite, non-empty set of states
+    => q0 [e] Q : start state
+    => A belongs to Q : set of accepting state
+    => & : ( Q x E ) -> Q
+          => from a given state on a given symbol (consume a single symbol)
+              -> next state
+
+** check image 3 for proper symbols **
+
+Can extend & to work with words
+
+- & * (q, [eps]) -> q
+- & * (q, cw) -> & * (&(q,c), w)
+    - char from E, word from E*
+- DFAM : the language of M, L(M)
+- A regular expression E, the language of E, L(E)
+- Acceptance of DFA M accepts a word w, when
+      &* (q0, w) [e] A
+
+- L(M) = { w | DFA M accepts  w }
+- Thm (Kleene) L is regular iff L = L(M) for some DFAM
+- Implementation
+  int state = q0
+  char ch
+  while not EOF do
+    read ch
+    case state
+      q0: case ch
+          a: state = ...
+          b: state = ...
+          ...
+      q1: case ch
+          a: state = ..
+          ...
+      qn: case ch
+          ...
+   is state [e] A

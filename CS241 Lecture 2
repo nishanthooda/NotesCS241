@@ -1,0 +1,94 @@
+CS241 Lecture 2
+
+Overview
+- C/C++: High Level Programs
+- C/C++ Code --> Compiler --> Assembly Language Program --> Assembler --> Machine Language/Executable (Binary file) --> Loader --> Hardware (Memory/CPU)
+- Assembly: low level English-like instructions
+- Assembly -> Machine Language done by Assembler
+
+Computer Programs
+- operate on data (input -> output)
+- are also data themselves
+=> called von Neumann architecture
+- reside in the same memory as the data they operate on
+- also possible to write programs that manipulate other programs (as opposed to just data), such as viruses and OS's
+
+How do we know whether memory contains machine instructions or data?
+- we don't (necessarily)
+- all blocks of 1's and 0's
+
+What does a machine instruction look like?
+- specific sequence of 1's and 0's
+- many different machine languages (processor specific)
+- every processor has its own machine language
+
+MIPS (simplified) (Microprocessor without Interlocked Pipeline Stages)
+- CPU: Central Processing Unit - "Brain"
+- Control Unit:
+	=> decodes instructon
+	=> dispatches to other parts of computer to carry them out
+- ALU (Arithmetic/Logic Unit): does math
+- Memory: many kinds
+	=> CPU (fast)(expensive) [32 registers x 4 bytes = 128 bytes]
+	=> cache
+	=> RAM ("main memory") [16,000,000,000 bytes]
+	=> Disk (HD, SSD)
+	=> Network storage (slow)(cheap)
+- On the CPU: small amount of very fast memory: registers
+- MIPS: 32 "general purpose" registers - each 32 bits: called one "word"
+- CPU can only operate on data that is stored in registers
+	=> called $0, $1, ..., $31
+	=> $0 is always 0
+	=> $31 is also special; $30 sorta special
+	=> example of register operation: add contents of registers S and T and put the result in register D
+
+How many bits are needed to encode a register #?
+- Number of registers = 32 = 2^5 = 5 Bits
+
+How many bits are needed to encode our add operation?
+- 15 bits for parameters (register S, register T, save in temp register/ register D all 5 bits each)
+- 32 bit registers - 15 bit parameteres = 17 bits to encode the operation
+
+RAM: large amount of memory storage, far from CPU
+- data travels between RAM and CPU on the bus
+- big array of n bytes, large n
+- each cell has an address 0,1,2,3,..., n-1
+- each 4-byte block 4k,...,4k+3 is a word
+- words have addresses, 0,4,8,c,10,14,18,1c,...
+- data in RAM must be transferred to registers before it can be used by the CPU
+
+Communicating with RAM, two operations load:
+- transfer a word from an address to a Register
+- desired address goes into Memory Address Register (MAR)
+- this goes on the bus to RAM
+- data at RAM is returned on the bus & it's stored in the Memory Data Register (MDR)
+- value in MDR is moved to destination register
+- store: does the reverse
+- this takes time!
+
+How does it execute code?
+- special register called PC (Program Counter), which holds the address of next instruction to execute
+- by convention, we guarantee that a specific address (say, 0) contains code => initialize PC to 0
+- computer then runs the Fetch-Execute cycle
+- set PC to 0, loop, IR <0 MEM[PC] (instruction register) holds current instructions, PC <- PC+4, decode and execute instruction in IR, end loop
+- PC holds address of the next instruction when the current instruction is executing
+
+How does a program get executed?
+- program called a Loader that puts the program into memory and sets the program counter to the address of the first instruction
+
+														   RAM
+													 ___________
+													|			      |
+											--->|	 Loader	  |
+											|	  |			      |
+											|	  |___________|  <- PC
+										  |	  |			      |
+										  |__	|	  app	    |
+													|			      |
+													|___________|
+
+What happens when program ends?
+- need to return control to loader
+- set PC to address of next instruction in the laoder - which address is that?
+- $31 will contain the right address
+- need to set PC to $31, using jr instruction: jr $31

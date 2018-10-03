@@ -1,0 +1,134 @@
+Last class:
+- want to trace all possible path simultaneously
+    - use a set of states that we could possibly be at
+    - Resulting DFA use "set of states" as its states
+    - Add transitions to next set of states reachable on input symbol
+- Every DFA is an NFA with only one option for each (state, symbol)
+- Every NFA can be converted to a DFA that accepts exactly the same language
+- Class of languages accepted by an NFA
+- Class of languages accepted by a  DFA      Both accept regular languages
+
+LECTURE 8
+
+[eps] - NFA = change state without consuming an input symbol
+[eps] used to transition to different machines ("free pass" to new state)
+
+L = {cab} U {strings with even # of a's}
+
+Trace: caba
+
+Read        Not Read        states
+[eps]        caba          {1,2,6}
+c            aba            {3,6}
+add new states reachable by [eps]-moves from {3,6}
+ca            ba            {4,7,3}
+cab           a             {5,7}
+caba          [eps]         {6} -> accept
+
+** See image 1 for diagram **
+
+- "free pass" to new state, set of states
+- [eps]-closure(s) = all states reachable from a state in S by 0 or more [eps]-transitions
+
+SIMULATOR
+states = [eps]-closure ({q0})
+
+while not EOF do
+    ch c-read ()
+    states <- [eps]-closure (U [delta](q,ch))             //added [eps]-closure for [eps]-NFA, delta shit same as NFA
+end do
+return states "intersect" A =/ 0/
+
+*can convert [eps]-NFA to DFA using a similar method to NFA->DFA but considering [eps]-transitions
+      -states DFA are again "set of states"
+*conversion can be automated
+
+Keele Theorem (one direction)
+
+Reg exp => [eps]-NFA -> DFA
+
+Reg exp
+1. 0/ -> 0
+2. [eps] -> accepting state
+3. a -> state -(a)> accepting state
+4. E1|E2                              ** See image 2 for diagram **
+5. E1E2
+6. E* , [eps] may not be in L(E) but [eps] does not belong to L(E*)
+
+** See image 3 for diagram on 5 and 6 **
+
+SCANNING
+
+Is C a regular language?
+
+- C Keywords
+- indentifiers
+- literals
+- operators
+- comments
+- punctuation
+
+=> sequence of these is also Regular
+    => can use a FA to tokenize (scanning)
+
+DFAs answer accept/reject
+given w, does w belong or L or not?
+
+we need: Input string w
+
+Break w into w1,w2,...wn where each wi belongs to L
+else ERROR
+consider L = { all valid (tokens) }
+
+let ML = ** See image 4 **
+be the DFA that recognizes L
+
+L dot L* recognizes a non-empty sequence of tokens
+      -note: don't accept [eps]
+
+** See image 5 for diagram **
+
+- FA with "action" to output token
+- non-deterministic
+
+Does this guarantee a unique decomposition of w into w1,...wn ?
+
+No! consider identifiers
+
+** See image 6 for diagram **
+
+Trace: abcd
+possible tokenizations
+a,b,c,d  ->  4 tokens
+ab,c,d   ->  3 tokens
+.
+.
+.
+abcd     ->  1 token
+
+Fix? decide to only [eps]-move if no other choice
+     => always return., longest possible next token
+
+a+++b !!
+
+a+ ++b or a++ +b ? 2nd one!
+
+what about a+++++b?
+probably a ++ ++ + b , but not valid !
+
+Eg. L = {aa, aaa}, Input : aaaa
+    token aaa followed by error - no token a
+    but aa, aa would be a valid tokenization
+
+    What should we do to fix it ?
+
+    Oh well... just add it to spec
+
+Maximal Munch algorithm: Run DFA (without [eps]-moves) until no non-error move available
+- If in accepting state, output token found
+- If not in accepting state, then we can backup to most recent accepting state
+  (use a variable to keep track of this)
+  -input up to this point as the next token and resume from here
+endif
+output token
+[eps]-move to q0

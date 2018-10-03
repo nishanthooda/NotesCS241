@@ -1,0 +1,77 @@
+CS 241 Lecture 7
+
+Alternative to the transition function = 2D array !
+Store it in 2D array and use lookup (state, ch)
+
+DFA with actions
+- Possible action could be "emit token"
+    => eg. L = { binary $'s with no leading 0s }
+           E = { 0, 1 } <-- alphabet
+           1(1|0)* | 0 = start with 1 and then use zero or more 1's and 0's
+                       = starts with 1 or use 0 by itself
+                       ** Look at image 1 for state diagram **
+                       N = value of number and circle circle is accepted state
+
+E.g. L = { w | w ends with abb }
+     E = { a, b }
+
+     ** Look at image 2 for state DFA diagram **
+
+Non-deterministic Finite Automata (NFAs)
+- more complex?
+- allow more than 1 transition on an input symbol at a state
+- machine chooses one direction or the other and accepts if at least one set of
+  choices leads to an accepting state
+- why add non-determinism ? often makes design/drawings simpler
+
+** Look at image 3 for state NFA diagram **
+
+- machines "guesses" when to stay in 1st state and when to go to the 2nd state
+
+Formally: NFA M = (E, Q, q0, A, [delta])
+
+Trace: baabb
+
+Read       Not Read          State
+  e         baabb             {1}
+  b         aabb              {1}
+ba          aab               {1,2}
+baa         bb                {1,2}
+baab        b                 {1,3}
+baabb       e                 {1,4} intersects A =/ 0/ (intersect not empty set)
+
+[delta] : Q x E -> 2^Q (represents all possible subsets of Q)
+    => {{}, {1}, {2},...,{1,2},{1,3},...,{1,2,3}...}
+    => # of subsets = 2^|Q|
+
+[delta]*(qs,e) = qs                                 //qs is set of states
+[delta]*(qs,cw) = [delta]*(U [delta](q,c), w)       //c is one char, w is word
+
+Accept w if [delta]*(q0,e) intersect A =/ 0/ (intesect not empty set)
+
+** see image 4 for correct symbols **
+
+E.g. (More complex)
+
+L = { cab } U { string with even # a's }
+E = { a,b,c }
+
+** Look at image 5 for NFA state diagram **
+
+Trace: caba
+
+Read     Not Read     States
+E         caba          {1}
+c         aba           {2,6}
+ca        ba            {3,5}
+cab       a             {4,5}
+caba      E             {6} accept
+
+** Look at image 6 for DFA state diagram **
+Any state with 1,4,6 is accepting
+
+- A DFA is already an NFA
+- Possible to covert any NFA to a DFA
+- accept Regular Languages
+
+Tuesday: new machine E-NFAs (can transition on epsilon)

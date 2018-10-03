@@ -1,0 +1,82 @@
+Foundtions of Sequential Programs 
+
+What is "sequential programming"?
+- "oridinary" - NOT concurrent or parallel
+- "single-threaded" : only one happens at a time
+
+Goal: Foundations 
+- understand how sequential programs "work"
+
+Starting point: bare hardware (so to speak)
+- for CS 241, simulates MIPS machines (only interprets 1's and 0's)
+
+At the end: 
+- get programs written in a C-like and change it into MIPS
+
+What is "1010"?
+
+BINARY AND HEXIDECIMAL NUMEBRS
+- bit: binnary digit, i.e. 0 or 1 (high/low voltage, config on CD)
+     : all computer understands 
+     : convenient to group together 1100, 1001
+
+- byte: 8 bits eg. 1100, 1001 <- one byte
+	  : 2^8 = 256 different bytes
+
+- word: machine specific grouping of bits
+	  : in this course, 32-bit computer architechture, so 1 word = 32 bits = 4 bytes
+	  : computers are frequently 64 bits today
+
+- nibble: 4 bits (half a byte)
+
+Given a byte (or word) in memory, what does it mean? 
+- can mean alot of things! 
+
+1.) A number! ...but what number?
+- binary number system
+
+NEGATIVE BINARY NUMBERS
+- 0 as '+', 1 as '-'
+- "signed-magnitude"
+- 1100 1001 = -73
+- but! 
+	:arithmetic is tricky 1000 0001 + 0000 0001 = 0 WRONG!
+	:there are TWO 0's!! 1000 and 0000
+- better way!
+	: 2's compliment
+	Steps:
+			1.) Interpret number as n-bit unsigned 
+			2.) If the first bit 0, done
+			3.) Else, substract 2^n 
+			OR.) Invert bits and add 1
+			E.g.) 1100 1001 = 201 - 256 = -55
+
+				- 2^(n-1) ... 2^(n-1) - 1
+				- left bit sign, mod 2 arithmetic
+
+HEXADECIMAL
+- base 16: 0...9, A...F
+- more compact than binary 
+- each hex digit = 4 bits (nibble)
+- 1100 1001 (2) = C9 (16) = 0xC9
+
+Given a byte, how do we know if it unsigned, signed magnitude, or 2's compliment? You don't!!
+
+2.) A character! ...but which character?
+- we need a mapping!
+
+ASCII
+-uses 7 bits 
+-8th bit can be used for additional characters
+- 1100 1001, ignore the first 1 
+- 100 1001: decimal 73 = ASCII for I
+- A = 65 and a = 97
+
+3.) An instruction... or part of one 
+- one word
+- 32 bit word 
+
+4.) Garbage
+
+
+

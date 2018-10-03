@@ -1,0 +1,105 @@
+CS241 Lecture 3
+
+Overview
+- $31 is special: used to store address of where to jump back to
+- Need to set PC to $31 - jr #31
+- $0 is always the number 0
+
+Example 1: Add value in reg 5 to reg 7, store result in reg 3 and return
+1. add $3, $5, $7
+2. jr $31
+
+00011, 00101, 00111
+d (3)   s (5)   t (7)
+
+11111 (31)
+
+address
+	0   0000 0000 1010 0111 0001 1000 0010 0000 <= final for 1.
+	4	  0000 0011 1110 0000 0000 0000 0000 0100 <= final for 2.
+
+
+Example 2: Add 42 to 52, store sum in $3 and return (need to load numbers)
+
+address
+	0	  1.) lis $5: "load immediate and skip"
+		 	   => treat next word as an immediate value and load it into $d
+		 	   => then skip to the following instr PC = PC +4 b/c don't want to use current number as an instruction
+	4	  2.) .word 42
+	8	  3.) lis $7
+	c	  4.) .word 52
+	10	5.) add $3, $5, $7
+	14	6.) jr $31
+
+Assembly
+- replaces 1's and 0's with easier to use mnemonics
+- less chance of error
+- translation can be automated b/c one line of assembly = exactly one machine instruction (word)
+
+Example 3: Compute the absolute value of $1, store in $1, return
+- 2 cases: negative & non-negative
+- some instr modify the PC - how we get "branches and jumps" to move around in diff parts in our code (eg. jr)
+- beq: "branch equals"
+	-> branch if two registers have equal contents
+	-> increment PC by given # of words
+	-> can branch backwards
+- also bne: "branch not equals"
+- slt: "set less than" used for comparing number with 0 to see if it is negative
+- slt $a, $b, $c:  $a <-1 if $b < $c; 0 otherwise
+
+1.) slt $2, $1, $0  ; compare $1 < 0
+2.) beq $2, $0, 1   ; if false, skip next instr
+3.) sub $1, $0, $1  ; subtract number from 0 in $0[which is pre-loaded] so negatives cancel out. $1 < 0-$1
+4.) jr $31
+
+Example 4 - Looping: Sum integers 1-13, store in $3 and return
+
+address
+	0		  - lis $2                   - lis $2
+	4		  - .word 13                 - .word 13
+	8		  - add $3, $0, $0           - lis $1
+	c		  - add $3, $3, $0           - .word -1
+	10		- lis $1									 - add $3, $0, $0
+	14		- .word -1								 - foo add $3, $3, $2
+	18		- add $2, $2, $1 					 - add $2, $2, $1
+	1c		- bne $0, $2, -5           - bne $2, $0, -3        ; -5 / -3 so program counter goes back 5 / 3 steps to loop (currently at jr$31)
+	20		- jr$31										 - jr $31
+
+The assembler lets you use labels: (eg label: operation operand)
+- foo: add $3, $3, $2 (foo is memory address for next instruction)
+		.
+		.
+		.
+- bne $2, $0, foo
+- jr $31
+
+
+RAM
+lw $a, i($b) "load word" Ram => reg
+				 content $a => MEM [$b + i]
+
+Ex. $1 = address of an array
+	  $2 # of elements in array
+	  Place element at 5 in $3... each element is a word
+
+EASY
+
+lw $3, 20($1)
+       |
+       (5*4)
+
+
+GENERAL
+
+	lis $5
+	.word 5
+	lis $4
+	.word 4
+	mult $5, $4
+	mflo $5          ; read and copy result to register 5
+	add $5, $5, $1
+	lw $3, 0($5)
+
+sw: "store word"
+mult: mult $a, $b    --> product of 2 32 it #'s is 64 bits
+					 => hi low

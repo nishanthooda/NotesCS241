@@ -1,0 +1,164 @@
+CS241 Lecture 4
+
+- 1000 * 1000 = 1 000 000
+- mult $a, $b ; product of mult two 32 bits #'s is 64-bits => too big for 1 reg
+              ; 2 special regs : hi & lo ; $a * b  => hi : lo
+                                                      32 + 32 => 64 bits
+- mflo $a : move from lo to $a
+- mfhi $a : move from hi to $a
+- Division hi stores remainder, lo stores quotient
+
+IMPLEMENTING A PROCEDURE
+
+Two Problems
+    1.) Call and Return
+        - How do we transfer control into and out of f?
+        - What if f calls another procedure g ?
+        - How do we pass parameters? return values?
+
+    2.) Registers: what if a procedure we call overwrites data another procedure is using
+        Eg. some critical data in $3 => call f => f modifies $3 => on return, critical data in #3 is lost
+
+        Store in RAM !
+        - choice of top or bottom ?
+        - keep track of whats in use
+        - MIPS $30 initialized (by loader) to just passed last word in memory
+        - can use $30 as a "bookmark" to separate used & unused RAM if we allocate form the bottom
+        - f calls g => g calls h => h returns => g returns => f returns
+
+        |--------------|
+        |    code      |
+        |--------------|
+        |              |
+        |--------------|
+        | h regs       |
+        |--------------|
+        | g regs       |
+        |--------------|  ^
+        | f regs       |  |  calls
+        |--------------|  |
+$ 30 --->
+
+^ $30 loops the stacks, goes up and comes back down
+
+* strategy: each procedure stores in RAM
+- the regs it wants to used
+- and restores the original values on return
+- RAM used LIFO => stack
+- $30 is a stack pointer, contains address of top of the stack
+
+TEMPLATE FOR PROCEDURES
+
+f: sw $2, -4 ($30)  ; push regs $2 and $3 into RAM
+   sw $3, -8 ($30)  ; now must decrement stack pointer $30
+   lis $3           ; load into 3 bc it is saved
+   word 8
+   sub $30, $30, $3 ;
+
+   ** Place body of f here **  ; uses $2
+
+   add $30, $30, $3 ; increment stack pointer
+   lw $3, -8($30)   ; restore regs
+   lw $2, -4($30)
+   _____ ?          ; return
+
+
+1.) What about call and return ?
+
+CALL
+
+main:
+
+0     lis $5
+4     .word f                       ; address of line labelled f
+8     jr $5 <- NOPE use jalr $5     ; jump to that line
+c     (HERE)
+.
+.
+f                                   ; f = address of this line in memory
+
+return ? - need to set PC to the line right after jr
+         - i.e. (HERE)
+
+* jalr "jump and link register"
+    - like jr
+    - $31 is set to the current PC
+
+f calls g => g will overwrite $31 using jalr
+- should save on stack
+- replace "$jr 5" with jalr $5 above, then return is jr $31
+
+main:
+      lis $5
+      .word f
+      sw $31, -4($30)       ; push $31 onto stacks
+      lis $31               ; decrement stack pointer
+      .word -4
+      add $30, $30, $31
+      jalr $5               ; call ff
+      lis $31               ; increment stack pointer
+      .word 4
+      add $30, $30, $31
+      lw $31, -4 ($30)
+      jr $31
+
+f:
+            ; push regs that f will use onto stack
+            ; decrement $30
+            ; body of f
+            ; increment $30
+            ; restore regs
+            ; return to caller
+
+
+Parameter and Result Passing
+
+- generally use Registers (Document!)
+- if too many param, could use the stack/RAM
+
+Procedure example: Sum 1 to N
+
+      ; sum 1 to n: adds the numbers 1...N
+      ; Registers:
+      ; $1 - working             ;  just save $1 and $2
+      ; $2 input(value of N)
+      ; $3 - output              ; dont need to save $3
+
+sum 1 to N:
+
+    sw $1, -4($30)
+    sw $2, -8($30)
+    lis $1
+    .word 8
+    sub $30, $30, $1
+    lis $1
+    .word -1
+    add $3, $0, $0
+    add $3, $2, $3   <-- topOfLoop
+    add $2, $2, $1
+    bne $2, $0, topOfLoop
+
+    lis $1
+    .word 8
+    add $30, $30, $1
+    lw $1, -4($30)
+    lw $2, -8($30)
+    jr $31
+
+I/O
+
+OUTPUT
+
+sw to 0xffff000c => prints least-sig byte to screen
+
+INPUT
+
+lw from 00xffff0004 next char from stdin will be least-sig byte
+
+Ex.
+
+lis $1
+.word 0xffff000c
+lis $2
+.word 67    ;  C
+sw $2, 0 ($1)    ; prints C

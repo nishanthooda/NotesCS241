@@ -1,0 +1,147 @@
+THE ASSEMBLER
+
+- Input: Assembly code
+- Output: Machine code
+
+Translation - 2 phases
+
+    1.) Analysis - understand the meaning of source string
+    2.) Synthesis - output of equivalent target string
+
+Assembly file-stream of characters
+    - group characters into meaning tokens
+    - e.g. label, hex #, reg #, .word etc
+
+This is done for you asm.rkt, asm.cc
+Your job:
+          1.) group tokens into instructions (if possible) <-- Analysis
+          2.) output equivalent machine code               <-- Synthesis
+
+Strategy: Focus on finding valid sequences
+          => anything else if ERROR        <-- print to stderr
+
+Big Problem: beq $2, $1, here  <-- dont know this yet
+              .
+              .
+        here: ....
+
+Standard solution: 2 passes
+
+- Pass 1: => group tokens into instructions
+          => record address of all labelled instructions "symbol table"
+             list of (label, address) pairs
+          Note: a line of assembly may have multiple labels
+          f:
+          g:
+          mult $1, $2
+
+- Pass 2: translate each instruction to machine code
+          - lookup labels as required
+
+Your assembler: - output assembled MIPS to stdout
+                - output symbol table to stderr
+
+Eg. main:
+          lis $2                0
+          .word 13              4
+          add $3, $0, $0        8
+    top:
+          add $3, $3, $2        C
+          lis $1                10
+          .word -1              14
+          add $2, $2, $1        18
+          bne $2, $0, top       1C
+          jr $31                20
+    beyond:                     24
+          ...
+
+Pass 1
+      - group tokens into instructions
+      - build symbol table
+      - first label (main, 0x0)
+      - second label (top, 0xC)
+      - third label (beyond, 0x24)
+
+Pass 2
+      - translate each instruction
+      - e.g. lis $2 0000 0000 0000 0000 0001 0000 0001 0000
+             .word 13 => 0000 .... 0 1101
+                       => 0x0000000d
+             bne $2, $0, top
+                 lookup top (0xC), calculate (top - pc) / 4
+                                             (0xC - 20) / 4 = -5
+                                              0xfffb
+             assemble (for bne $2, $0, top): 0x1440fffb
+
+Negate a number in 2's comp --> flip bits and add 1
+
+Bit-level operations
+- To put 000101 into first 6 bits, need to append 26 ZEROS
+=> left- shift by 26 bits        <-- (5 << 26)
+=> 0001010...26 zeros ...0
+
+- move $2, 21 bits to the left  (2 << 21)
+- move $0, 16 bits to the left (0 << 16)
+
+- (-5) = 0xfffffffb   (32 bits, 4 bytes) only want 16 bits
+=> bitwise AND with 0xffff      (-5 & 0xffff)
+=> transforms it to 0x0000ffff
+
+Put everything together using bitwise OR all pieces
+(5 << 26) | (2 << 21) | (0 << 16) | (-5 & 0xffff)
+
+Binary output so assembled instruction has value: (339804155) base 10
+cout << 339804155 <-- NO WRONG !
+- print 9 bytes, we want the 4 byte representation
+
+int instr = 339804155
+char c = instr >> 24    <-- moving the most significant byte to be least significant
+cout << c
+char c = instr >> 16
+cout << c
+char c = instr >> 8
+cout << c
+char c = instr >> 4
+cout << c
+char c = instr
+cout << c
+
+
+FORMAL LANGUAGES
+
+                    Assembly Lang.                Higher level Lang.
+
+Structure               simple                       more complex
+
+Recognition              easy                            harder
+
+Translation to ML       1 to 1                          usually no single
+                        straightforward                   translation
+                        unambiguous
+
+How do we handle complexity ?
+
+- want a formal theory for string recognition
+- general principles that work in the context of any prog. lang.
+
+DEFINITIONS
+
+alphabets  - finite set of symbols eg. { a, b, c }
+           - denoted E = { a, b, c }
+
+string (or word)   - finite sequence of symbols from E
+                   - eg. a, aba, abccabc
+                   - length of a string lwl = # char in w, eg. label = 3
+
+empty string    - E, empty sequence of symbols
+                - |E| = 0
+                - E is not part of E
+
+languages       - set of strings, eg. { a^2n * b, n >= 0 }
+                - language of all strings where we have an even # of a's followed by a b
+                - Note E - empty string
+                - { } or 0/ - empty languages
+                - { E } langauge with 1 string, the empty string only contains E
+
+symbol          - can be anything
+                - E = { dot, dash } L = { valid English words in morse code }
