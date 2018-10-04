@@ -1,0 +1,132 @@
+Maximal Much Algorithm
+
+Run DFA (without [eps]-moves) until no, non-error move available
+If in an accepting state, output found token
+Else
+  -backup to most recent accepting state
+  -use a variable to keep track of this input to that point is next token, output token resume from here
+Endif
+  -[eps]-move back to q0
+
+Simplified Maximal Munch
+
+  - if not in an accepting state, when no valid transitions
+      -dont backup DFA, simply ERROR
+
+Eg. Tokens, identifier (must start with letter, allow a-z,+,- as internal char; must end with a letter)
+            operator ++ => Simplified MM tries to read 1 token but fails - doesn't end with a letter
+Input : ab++
+MM would read as ab,++
+
+In practice, simplified MM good enough
+    - Languages designed to facilitate scanning by simplified MM
+
+Eg. C++ (before 11)
+
+    vector <pair<string,int>> v; <- one token
+    a+++b ERROR
+    fix is two tokens -> a++ +b, a+ ++b
+
+Context-free languages
+  -consider E = {(,)} L = { all strings with balanced parenthesis }
+  - eg. [eps],(),()(),(()),(())(), all in L
+  - eg. ),(,()),)( are not in L
+
+DFA for L : ** See Image 1 **
+
+DFA really uses its states for memory
+  - remember patterns seen so far such as "c","ca","cab","even # a's"
+  - We don't want to set a limit for nested parenthesis so DFA won't work
+  - Regular -> context-free languages ((FL))
+    - languages that can be described by a Context-free grammar (CFG)
+    - a set of "re-write rules"
+
+Intuition
+  S -> [eps]
+  S -> (S)
+  S -> SS
+
+"a word in the lang is empty or a word surrounded by () or concatenation of two words within L"
+
+Shortform
+
+S -> [eps] | (S) | SS | means "or"
+           |     |    |
+
+Notation => means "derives"
+[alpha] => [beta] means [beta] can be derived from [alpha] in one step
+            - application of 1 production rule from the grammar
+
+Formally : A context-free grammar
+[eps] - a finite, nonempty alphabet - terminal symbols
+  N   - a finite, non-empty set of non-terminals
+      - often called variables
+      - we use V "vocabulary" = E [U] N
+  P   - a finite set of production rules: A -> [beta], A belongs to N
+                                                      [beta] belongs to V*
+  S   - a start symbol, S belongs to N
+
+Conventions
+  a,b,c ... symbols from E
+  w,x,y ... words from E*
+  A,B,S     non-terminals from N
+    S       start symbol
+
+[alpha],[beta],[gamma] elements of V*
+  - RHS of production rules
+  - may contain both terminals and nonterminals
+
+we write [alpha],A,[beta] => [alpha],[gamma],[beta] if there is a production
+A -> [gamma] in P
+      - RHS derivable from LHS in one step
+
+[alpha]=>* [beta] means [alpha] = S0 => S1 => S2 => S3 =>  => Sk => [beta],
+where k >= 0
+      - 0 or more steps
+
+Definition
+L(G) = {w | S =>* w} w belongs to E*
+Language specified by G consists of the strings of terminals derivable from S
+
+Definition
+A language L is context-free if L = L(G) for some grammar G
+
+Eg. palindromes
+
+E = {a,b,c}
+S -> a S a | b S b | c S c | M
+M -> a | b | c
+Show S->* abcba, give derivation
+S => aSa => abSba => abMba => abcba
+
+Eg. Expressions E = { a,b,c,+,-,*,/ }
+    L1 = { valid arithmetic expressions over E1 }
+
+    S -> a | b | c | SOPS | (S)   <- L2 = {arith exp over E2}
+    OP -> +| - | * | /
+    E2 = { a,b,c,+,-,/,(,)}
+
+Show S =>* a + b : S => SOPS => a OPS => a + S => a + b
+                             => S + S => a + S => a + b
+
+Leftmost derivation: always replace the leftmost non-terminal
+Rightmost derivation: always replace the rightmost non-terminal
+
+** See image 2 for parse trees **
+
+Every leftmost (or rightmost) derivation corresponds to a unique parse tree
+
+Eg. a + b * c
+S => SOPS => SOPSOPS => aOPSOPS
+=> a + SOPS => a + bOPS => a + b * S => a + b * S
+OR
+S => SOPS => aOPS => a + S => a + SOPS => a + bOPS
+=> a + b * S => a + b + c
+
+2 leftmost derivations
+2 different parse trees
+
+** See image 3 for the parse trees **
+
+* A grammar for which some word has more than one distinct (parsetree) leftmost derivation is called ambiguous
+Don't want a grammar with two different interpretations, so no ambiguity 
